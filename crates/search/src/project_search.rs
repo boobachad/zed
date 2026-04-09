@@ -1077,7 +1077,13 @@ impl ProjectSearchView {
         window: &mut Window,
         cx: &mut Context<Workspace>,
     ) {
-        let filter_str = dir_path.display(workspace.path_style(cx));
+        let filter_str = if dir_path.is_empty() {
+            dir_path.display(workspace.path_style(cx))
+        } else {
+            // Append /** so the filter is anchored to this exact directory and doesn't
+            // match same-named directories elsewhere in the tree (e.g. node_modules/.../src).
+            format!("{}/**", dir_path.display(workspace.path_style(cx))).into()
+        };
 
         let weak_workspace = cx.entity().downgrade();
 
@@ -3859,7 +3865,7 @@ pub mod tests {
                     .update(cx, |editor, cx| editor.display_text(cx)),
                 "\n\nconst ONE: usize = 1;\n\n\nconst TWO: usize = one::ONE + one::ONE;",
                 "New search in directory should have a filter that matches a certain directory"
-            );
+                    );
                 })
             })
             .unwrap();
